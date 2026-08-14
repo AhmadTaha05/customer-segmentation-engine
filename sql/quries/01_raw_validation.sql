@@ -213,3 +213,23 @@ SELECT DISTINCT country, COUNT(*) AS row_count
 FROM transactions_raw
 GROUP BY country
 ORDER BY country;
+
+
+-- Query: Zero Quantity & Invoice Case Sensitivity Check
+-- Purpose: Confirm exact quantity = 0 doesn't exist, and confirm no 
+--          lowercase 'c'-prefix invoices exist that would slip past 
+--          LIKE 'C%' filtering used throughout this file
+-- Finding: Neither case exists in the raw data. quantity = 0 never occurs, 
+--          and all cancellation invoices consistently use uppercase 'C'. 
+--          No additional cleaning rule needed for either case.
+
+-- Check 1: Does exact zero quantity exist, and what does it look like?
+SELECT invoice, stock_code, description, quantity, price, customer_id
+FROM transactions_raw
+WHERE quantity::numeric = 0;
+
+-- Check 2: Any lowercase 'c' prefix invoices that would slip past LIKE 'C%'?
+SELECT DISTINCT invoice
+FROM transactions_raw
+WHERE invoice ~ '^[cC]' AND invoice !~ '^C'
+LIMIT 20;
